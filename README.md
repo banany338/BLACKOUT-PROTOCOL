@@ -62,4 +62,6 @@ Install the test browser once with `npx playwright install chromium` if needed.
 
 [User guide](docs/USER_GUIDE.md) · [Project updates](docs/PROJECT_UPDATES.md) · [Technical reference](docs/TECHNICAL_REFERENCE.md) · [Presentation and promo](docs/PRESENTATION.md) · [Submission text](docs/SUBMISSION.md)
 
+[Animated presentation](output/presentation/BLACKOUT-PROTOCOL-animated.pptx) · [Static PDF](output/pdf/BLACKOUT-PROTOCOL.pdf) · [Promo video](output/video/BLACKOUT-PROTOCOL-promo.mp4). Promo narration uses ElevenLabs' free plan; publish it with the title **BLACKOUT PROTOCOL — Recovery planning | elevenlabs.io** for non-commercial use. See the [media guide](docs/PRESENTATION.md).
+
 Built with React, TypeScript, React Flow, Fastify, Socket.IO, Zod and Node SQLite. AI assisted design, implementation, testing, documentation and presentation materials. The app uses deterministic rules and requires no AI service. [Libraries and sources](docs/SOURCES.md).

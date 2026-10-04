@@ -5,11 +5,12 @@ These materials show implemented features using illustrative data. They contain 
 ## Files
 
 - **PDF for presenting or uploading:** `output/pdf/BLACKOUT-PROTOCOL.pdf` (8 pages).
-- **Editable slides:** `output/presentation/BLACKOUT-PROTOCOL.pptx` (8 slides, with speaker notes).
+- **Animated editable slides:** `output/presentation/BLACKOUT-PROTOCOL-animated.pptx` (8 slides, with speaker notes).
+- **Original static slides:** `output/presentation/BLACKOUT-PROTOCOL.pptx`.
 - **Promo:** `output/video/BLACKOUT-PROTOCOL-promo.mp4` (45 seconds).
 - **Promo captions:** `output/video/BLACKOUT-PROTOCOL-promo.srt`.
 
-The PDF preserves the checked slide appearance. The PPTX has editable slide text and notes. Screenshots are images of the working interface, cropped to focus on relevant controls. Example relationships are illustrative.
+The PDF preserves the checked slide appearance and has no animations. The animated PPTX has editable text, short fade transitions and staged reveals. Screenshots are images of the working interface, cropped to focus on relevant controls. The dark map zoom controls are hidden only during media capture. Example relationships are illustrative.
 
 ## Three-minute speaking script
 
@@ -47,7 +48,9 @@ BLACKOUT turns a dependency the team might overlook into a concrete recovery arr
 
 ## Presenting
 
-Use the PDF for a stable layout or the PPTX to edit the wording. Speaker notes include timing, sources and the limits behind each claim. Rehearse once with a timer. Keep [the live walkthrough](DEMO.md) or a readable exported plan available as a backup.
+Open the animated PPTX in PowerPoint or Keynote and start the slideshow. Use **Right arrow**, **Space** or a click to reveal the next part; advance again after each fade finishes. Each slide has one extra reveal, except slide 2, which reveals the email loss and its consequences separately. There is no timed slide advance, so you control the pace. The first content group appears automatically.
+
+All eight slides were rendered and checked. Keynote imports the native animations, and the opening reveal was checked during playback. PowerPoint playback has not been checked on this computer. Use the static PDF if the presentation computer cannot play the effects. Speaker notes include timing, sources and the limits behind each claim. Rehearse once with a timer. Keep [the live walkthrough](DEMO.md) or a readable exported plan available as a backup.
 
 ## Promo storyboard
 
@@ -61,7 +64,13 @@ Use the PDF for a stable layout or the PPTX to edit the wording. Speaker notes i
 | 36–41 s | Keep a readable plan and encrypted backup. | Output message |
 | 41–45 s | BLACKOUT PROTOCOL | Brand and repository |
 
-The promo uses motion typography, actual interface screenshots and a synthetic English voice. It includes a visible simulation label. No show footage, copied music or third-party promotional assets are used.
+The promo uses motion typography, actual interface screenshots and ElevenLabs' **George — Warm, Captivating Storyteller** voice with **Multilingual v2**, using free credits. Seven generated clips fit their scene windows without cutting speech or speeding it up. The dark map zoom controls no longer appear in the captured maps. Simulation labels remain visible. No show footage or copied music is used.
+
+### Video title and voice credit
+
+When sharing this version, use the title **BLACKOUT PROTOCOL — Recovery planning | elevenlabs.io**. The same credit is stored in the MP4 title metadata. The narration is synthetic.
+
+ElevenLabs' [free-plan publication terms](https://help.elevenlabs.io/hc/en-us/articles/13313564601361-Can-I-publish-the-content-I-generate-on-the-platform) require attribution in the title and permit non-commercial use. The free narration has no commercial licence. No paid plan or upgrade was used. A commercial release needs appropriately licensed narration.
 
 ## Submission wording
 

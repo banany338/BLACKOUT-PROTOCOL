@@ -47,6 +47,6 @@ Physical-device LAN use, portable-file compatibility and an independent security
 
 [Presentation, speaking script and promo](PRESENTATION.md) · [User guide](USER_GUIDE.md) · [What changed](PROJECT_UPDATES.md) · [Three-minute walkthrough](DEMO.md) · [Submission text](SUBMISSION.md).
 
-The local delivery files are an eight-slide PPTX, an eight-page PDF and a 45-second MP4 with English narration and SRT captions. They use actual interface screenshots with illustrative data. Team names and member names are omitted, as requested. The README is the short run/use guide; detailed notes are preserved in TECHNICAL_REFERENCE.md.
+The delivery files include an eight-slide animated PPTX, an eight-page static PDF and a 45-second MP4 with English narration and SRT captions. Use `output/presentation/BLACKOUT-PROTOCOL-animated.pptx` for the slideshow. They use actual interface screenshots with illustrative data. Team names and member names are omitted, as requested. The README is the short run/use guide; detailed notes are preserved in TECHNICAL_REFERENCE.md.
 
-No new GitHub push or competition submission was made. The user handles publication.
+The application and materials were pushed to [GitHub](https://github.com/banany338/BLACKOUT-PROTOCOL) on 4 October at the user's request. No competition form was submitted.

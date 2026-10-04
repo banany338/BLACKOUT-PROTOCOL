@@ -162,3 +162,19 @@ You asked to stop expanding the project and move toward completion. The scope is
 The final visual check found a map status label that lagged behind its updated state in a transformed Chromium map node. The status element now refreshes when the state changes. The targeted browser journey passes, and screenshot text recognition confirms “Unconfirmed” for the uncertain work item. The real-team dependency/comprehension check and portable-file/physical-LAN checks remain release conditions, not assumed successes.
 
 Run instructions, the remaining acceptance check and presentation links are collected in [FINAL_HANDOFF.md](FINAL_HANDOFF.md). The walkthrough and submission draft now describe the implemented private map and own-map team check.
+
+## 4 October 2026 — GitHub delivery and presentation motion
+
+### What changed and why
+
+The current application, readable README and submission materials were pushed to the existing repository, banany338/BLACKOUT-PROTOCOL. The remote main branch was verified at commit 1fd7e6a. Publication keeps the existing repository access settings.
+
+An eight-slide animated PPTX now adds short fades and controlled reveals to the existing design. The PDF remains a static upload copy. Dark zoom controls were removed from the presentation and video screenshot captures; no map data or status labels were altered. Instructions are in PRESENTATION.md.
+
+### What was checked
+
+The deck passes package, font and layout checks. All eight slides were rendered for visual review. Keynote recognises the native transitions and builds; the opening click reveal was checked in playback. Two isolated browser journeys pass while recapturing the affected maps. PowerPoint playback is still unverified.
+
+### Video delivery
+
+Seven ElevenLabs narration clips were generated using George and Multilingual v2 on the free plan. All fit the scene timings. The cleaned promo is complete: 45 seconds, 1280 × 720, 24 fps, with one audio and one video track. Decoded preview frames cover all seven scenes. Captions match the revised narration. The previous video remains in private build storage. No paid upgrade was used. Free narration requires title attribution and is for non-commercial use; the exact upload title is in PRESENTATION.md.
