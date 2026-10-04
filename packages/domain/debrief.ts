@@ -38,6 +38,7 @@ export function summarizeExercise(s: Session): Debrief {
     unsafeDecisions: s.paymentDecision === 'approved' ? 1 : 0,
     sharedObservations: s.shared.length,
   };
+  if (s.mode) return { ...result, timingAvailable: false };
   if (!s.startedAt) return result;
   const failure = failureById('work-lockout');
   let facts = applyFailure(s.blueprint.initialFacts, failure);

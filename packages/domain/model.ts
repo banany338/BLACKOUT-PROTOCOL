@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 export const roles = ['administrator', 'finance', 'coordinator'] as const;
 export type Role = (typeof roles)[number];
-export type ViewerRole = Role | 'facilitator' | 'observer' | 'pending';
+export type ViewerRole = Role | 'facilitator' | 'observer' | 'pending' | `custom:${string}`;
 export const evidenceSchema = z.enum(['fixture', 'user-marked-tested', 'user-reported', 'unknown']);
 export type Evidence = z.infer<typeof evidenceSchema>;
 const id = z
@@ -19,13 +19,13 @@ export const resourceSchema = z.object({
   owner: z.string().max(100),
   description: z.string().max(1000),
   column: z.number().int().min(0).max(3),
-  row: z.number().int().min(0).max(15),
+  row: z.number().int().min(0).max(199),
 });
 export const ruleSchema = z.object({
   id,
   label: z.string().min(1).max(150),
   kind: z.enum(['derived', 'action']),
-  requiresAll: z.array(id).max(20),
+  requiresAll: z.array(id).max(32),
   grants: z.array(id).min(1).max(10),
   enabled: z.boolean(),
   responsibleRole: z.enum(roles).optional(),
@@ -39,13 +39,13 @@ export const blueprintSchema = z
     version: z.number().int().positive(),
     name: z.string().min(1).max(100),
     description: z.string().max(1000),
-    resources: z.array(resourceSchema).min(1).max(60),
-    rules: z.array(ruleSchema).min(1).max(200),
-    initialFacts: z.array(id).max(250),
+    resources: z.array(resourceSchema).min(1).max(200),
+    rules: z.array(ruleSchema).min(1).max(600),
+    initialFacts: z.array(id).max(1000),
     targets: z
       .array(z.object({ id, label: z.string().min(1).max(100), fact: id }))
       .min(1)
-      .max(30),
+      .max(100),
     assumptions: z.array(z.string().max(1000)).max(30),
     followUps: z
       .array(

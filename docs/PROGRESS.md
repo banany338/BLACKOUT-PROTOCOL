@@ -1,38 +1,35 @@
-# Build progress
+# Current checkpoint — 4 October 2026
 
-Implementation started 2026-10-03. Read `BLACKOUT_PROTOCOL_PLAN.md` for requirements.
+## What is implemented
 
-- [x] Specification complete.
-- [x] M0 — Foundation and contracts.
-- [x] M1 — Recovery engine.
-- [x] M2 — Planner and comparison.
-- [x] M3 — Solo scenario and durable timeline.
-- [x] M4 — Cooperative room implemented; three-role integration validation in progress.
-- [x] M5 — HTML plan and JSON record/digest exports implemented.
-- [ ] M6 — Interface and demo reliability (browser QA in progress).
-- [ ] M7 — Validation and submission material.
+The core product is an organisation recovery map: add services and owners, record access/recovery dependencies, simulate a loss, see affected work, prepare independent recovery arrangements and save an offline reference. The main page stays minimal: logo/name, bold headline and private-key panel.
 
-## Continuation policy
+- Direct service editing, inline phones/backups, essential-work editing and a secondary advanced editor.
+- Encrypted local workspace/backup, historical versions, passphrase change, conflict protection, local Google Directory import and readable HTML/PDF export.
+- The same visual map in My plan and the blackout sandbox, including multiple losses, AND prerequisites, loops, unknown methods and separate proposals.
+- **Own-map team checks:** explicit sharing preview; private fields excluded; workspace locks; host-approved participants; owner/account-scoped actions; custom account responsibilities; shared simulated state; pause/resume/finish; summary export; active room deletion; saved room reopening.
+- Detected private LAN invite addresses. This reduces manual link preparation; it does not prove physical-device connectivity.
+- Optional separate Harbor Aid story with custom responsibilities and private clues.
+- Generated offline cache and a self-contained portable HTML build. Team rooms require their server; portable-file execution remains unverified.
 
-The user requested work until the five-hour usage allowance is nearly exhausted, then continuation after reset. Check usage at substantive milestones. Save the exact current state and next commands here before stopping. The window reset on 2026-10-03; the latest check at 18:42 Europe/Warsaw showed 9% used. Do not spend reset credits.
+## Validation
 
-## Current work
+Production build and TypeScript pass. **41 unit/integration tests in 11 files and 9 Playwright browser journeys pass.** The new shared-map journey uses a host plus three independent browser profiles, verifies privacy/approval/account actions, captures a summary download and closes participant views on deletion. See [VALIDATION.md](VALIDATION.md).
 
-React / Fastify / SQLite application built and running locally at http://localhost:4310. All data is fictional. No external account integrations or provider credentials.
+## Completion direction
 
-Validated so far:
-- Typecheck and production build pass.
-- 16 domain/integration tests pass.
-- Browser solo walkthrough: improved model forecasts 4/4 activities; recovery + separate containment restores 4/4; independent contact verification rejects the fictional payment request; debrief is reached.
-- Forecast remains distinct from activities available now (baseline lockout: 1/4).
-- Scenario observations were corrected to reflect recovery performed before later chapters.
+The user asked to stop expanding features and move toward completion. Core scope is frozen. The presentation, short README, narrated promo and final visual polish are complete. Use [PRESENTATION.md](PRESENTATION.md) for delivery files and the speaking script, and FINAL_HANDOFF.md for the verified run path and remaining acceptance check.
 
-Next:
-1. Finish reconnect/pending-action reliability and debrief measurements.
-2. Extend tests for disk restart, stale/concurrent commands, pause/resume, and all three roles.
-3. Restart the server to load recent server edits, rebuild, then verify phone/keyboard/export journeys in the browser.
-4. Create README, demo guide, validation matrix, submission text and slide outline.
+## Next work
 
-`npm run build`, `npm test`, `npm start` are the core commands. The current server is a non-watching process, so restart after server edits. Playwright test sources exist but have not been executed; there is no installed Chromium. Browser checks have used the Codex in-app browser.
+1. Confirm the user's actual connections for Google Drive, Instagram and YouTube. Antonio/Richard/Mary pairing is provisional. A clarification is pending; do not invent dependencies or change their encrypted workspace automatically.
+2. Ask owners/unfamiliar users to enter a non-secret setup and explain a useful finding. Automated tests cannot establish comprehension.
+3. Physical LAN with WAN disconnected, provider recovery checks, portable-file compatibility and independent security review. Do not label the current trusted-local-network server as production-ready.
 
-Physical multi-device LAN and WAN-disconnection tests remain unverified. Do not claim these passed.
+## Operations and constraints
+
+Run `npm run build`, then `npm start`; open http://localhost:4310. Frontend changes need rebuilding and backend changes need restarting. The current server runs the rebuilt app. Portable output: `dist/portable/BLACKOUT-PROTOCOL.html`.
+
+The user initially published GitHub themselves, then explicitly requested a push on 4 October. Publishing the current project and requested presentation/video revisions to `banany338/BLACKOUT-PROTOCOL` is now authorised. Do not change repository access. `PROJECT_DESCRIPTION.md` is the user's untracked file and is untouched.
+
+Keep documentation current in PROJECT_UPDATES.md and USER_GUIDE.md, as required by AGENTS.md. Respect the request to stop at the five-hour allowance boundary and resume after reset. Do not consume reset credits automatically.

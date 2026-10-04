@@ -1,45 +1,39 @@
-# Submission draft
+# Current submission text
 
-## Project title
+This is a draft to copy or adapt. No submission was sent by this change. Team names and member names are omitted at the user's request.
+
+## Project name
 
 BLACKOUT PROTOCOL
 
-## Team
+## Problem
 
-Team name: **to be supplied by the team**  
-Members and roles: **to be supplied by the team**
+A small organisation can lose access to several essential services when one shared email, phone or administrator becomes unavailable. A backup can fail at the same time if it depends on the account it is supposed to recover. Teams often have the pieces of a recovery plan but cannot see how they depend on each other or which work would stop.
 
-## Short description
+## Solution
 
-BLACKOUT PROTOCOL helps small organisations prepare for losing the account that holds their work together. A recovery map reveals hidden dependencies, including backup accounts that can only recover each other. A cooperative exercise gives the administrator, finance officer and coordinator different clues during a fictional compromise. Their choices determine whether they verify an impersonated request and complete the recovery and containment steps.
+BLACKOUT PROTOCOL helps the team map its services, owners and recovery arrangements, then safely ask: “What happens if this account or phone is lost?” The same map shows affected work, recovery loops and missing prerequisites. The team can evaluate an independent fallback, assign preparation tasks and save a readable recovery reference.
 
-The team can propose an independent recovery kit, compare it against the same failure, rehearse again, and leave with an offline action plan and an exercise record. The prototype runs on a local Node server with SQLite persistence and uses a deterministic rule engine. Recovery forecasts remain separate from current availability and depend on explicitly recorded assumptions.
+An optional cooperative check uses a reviewed copy of the organisation's own map. The host approves participants and assigns their accounts. Each owner records simulated recovery steps; missing prerequisites and unconfirmed methods block those steps. The resulting summary gives the team specific preparations to confirm in real life.
 
-## Why it fits defence
+Private plans are encrypted locally. Sharing a map is an explicit choice that excludes private notes, instructions, tasks, history and the workspace key. Shared rooms use reviewed metadata on a trusted local server.
 
-The project supports preparation, coordinated response and continuity for a volunteer organisation. It connects a specific technical weakness—a circular recovery dependency—to human decisions and owned follow-up tasks.
+## What is done and the goal
 
-## Demonstrable result
+A working local application includes direct service editing, dependency/loss analysis, separate proposals, assigned preparation tasks, encrypted backup/restore, local Google Directory import, offline references and shared checks of the same map. The interface centres on the map and keeps detailed explanations in the guide.
 
-In the included fictional work-account incident, the baseline has routes to 1 of 4 essential activities. Adding the independent kit produces routes to 4 of 4 under the model's prerequisites. Trusted access is restored only after recovery and containment actions. These are model outputs, not measured results for a real organisation.
+The production build passes, alongside 41 unit/integration checks and nine browser journeys. Browser checks include actual downloads, restore, offline planning, saved-plan conflicts, mobile layout and a host with three independent participants in a shared check.
 
-## Eight-slide outline
+The next acceptance step is to confirm one real team's dependencies and verify that unfamiliar users can explain a useful weakness and preparation. Physical offline LAN use, portable-file compatibility and independent security review remain unverified. Recovery actions are simulated; no real provider account is recovered or automatically tested.
 
-1. **The question:** “If the account holding everything together disappears, how do you get back?” Project title and team.
-2. **The dependency:** work account ↔ recovery mailbox; show the baseline map and the 1/4 result.
-3. **The product loop:** map → rehearse → improve → export. One screenshot per key moment.
-4. **The cooperative incident:** three roles, different clues, shared evidence and a suspicious request.
-5. **The technical core:** AND prerequisites, alternative routes, access versus trust, evidence and uncertainty.
-6. **One change, the same failure:** baseline 1/4 versus proposed 4/4; list the new assumptions.
-7. **What works and what remains:** saved rooms, idempotent actions, offline reference, validation evidence; state real-device and production limitations.
-8. **What the team takes away:** owned action plan, repeatable exercise, next development priorities, AI/library disclosure and demo/repository link if available.
+## Defence relevance
 
-This is an outline, not the final slide PDF. Use actual screenshots and the final validated figures when assembling it. Do not exceed the brief's ten-slide limit.
+The project maps dependencies between services and supports preparation and coordination during account-access emergencies. Its output is an owned preparation and a recovery reference the team can keep independently of the accounts being modelled.
 
-## Disclosure for the submission
+## Presentation
 
-AI assisted concept development, planning, implementation, tests, debugging and documentation. The running product uses deterministic rules and no AI API. Third-party libraries are listed in `docs/SOURCES.md`. Mark pre-event work accurately once the event dates are confirmed.
+Use the [three-minute product walkthrough](DEMO.md): map → chosen loss → understandable gap → proposed preparation → owner/team check → saved reference. Lead with the organisation's recovery finding.
 
-## Before submitting
+## Disclosure
 
-Add the actual team roster, event dates and approved public demo/repository links. Create and check the PDF deck. Run the physical LAN and WAN-disconnection demo, and ask two new users to explain the recovery loop after using the interface. No submission has been sent or project published.
+AI assisted planning, implementation, debugging, tests and documentation. The application uses deterministic rules and requires no runtime AI service. Libraries are listed in [Sources](SOURCES.md). Mark pre-event work according to the event's rules once the dates are confirmed.

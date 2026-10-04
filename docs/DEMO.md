@@ -1,57 +1,47 @@
-# Three-minute demonstration
+# Three-minute product walkthrough
 
-## Before presenting
+Show the problem and the useful result first. The main demonstration uses an organisation's map; the optional fictional story is secondary.
 
-- Run `npm run build`, then `npm start`.
-- Use the Harbor Aid baseline and **Work account compromised** failure.
-- Use a clean browser profile if you need the untouched template. Keep one completed improved room as a fallback.
-- For a team demonstration, connect three separate browser profiles or devices, assign all roles, and check room connectivity before starting.
-- Preserve the local server and router during any WAN-disconnection demonstration. Test this setup beforehand.
+## Prepare
 
-## 0:00–0:35 — The useful question
+Run `npm run build`, then `npm start`. Use a separate demonstration workspace with non-sensitive aliases and declared example connections. Mark them as illustrative unless an owner confirmed the real arrangement. Keep an exported readable plan as a fallback.
 
-> If the account that connects your organisation disappears, which parts of your work can you get back?
+Choose one account dependency that can block essential work, and one possible independent fallback. Keep a current plan and a separately labelled proposal. Test the walkthrough before presenting.
 
-Show the baseline map: one of four activities has a route. Inspect the work identity and recovery mailbox. Both account recovery routes need the other account; there is no independent entry point. The public website is still available.
+## 0:00–0:40 — The problem
 
-## 0:35–1:00 — Change one arrangement
+“If our main email disappears, can we still access the services we need?”
 
-Select **Recovery kit**, then **Compare plans**. The same failure and activities now produce a 4/4 recovery forecast. Point to the added assumptions: independent storage, available custodian, clean device. Available-now remains 1/4 until recovery is carried out.
+Open **My plan**. Show two or three services and their owners. Select the important account and show what access and recovery depend on.
 
-## 1:00–2:05 — Rehearse the human decision
+## 0:40–1:20 — Find the weakness
 
-Start an improved exercise and press **Start exercise**. Advance twice to chapter 3. In a team run, Finance sees the suspicious payment request; the Coordinator sees the independent contact. Share that observation and choose **Verify through the known contact**. The impersonation is rejected.
+Choose **Try a blackout** and select that dependency. Show the affected essential work and the missing prerequisite. If there is a recovery loop, explain it with the two account names.
 
-In facilitator mode, all roles are visible for presentation. Explain that real participants receive only their role's clues until those clues are shared.
+State that the app analyses declared arrangements. No real account is locked or contacted.
 
-Complete these actions:
+## 1:20–2:00 — Make one useful change
 
-1. Recover using the independent kit.
-2. Rotate work credentials.
-3. Revoke active sessions.
-4. Review recovery settings.
-5. Verify containment is complete.
+Inspect the suggested preparation and its requirements. Save it as a separate proposal. Show how the same loss affects work under the proposed setup. The owner still has to configure and test the real arrangement.
 
-Show that regaining control alone did not restore trusted access. The last gate returns all four activities to available-now.
+Open **Next steps** and show an assigned preparation. The useful outcome is an understandable weakness and an owned action.
 
-## 2:05–2:40 — Leave something useful
+## 2:00–2:35 — Check it with the owners
 
-End the exercise. Show the event timeline and measured containment time. Explain that these are exercise times, not estimates of a real provider's recovery speed. Export the plan and record. Save the digest separately.
+If showing a team room, open **Check with team** and briefly show the sharing preview. Use prepared participant profiles, approve their accounts and **Start team check**. One owner's simulated recovery can unlock another owner's next step. Unknown methods remain blocked.
 
-Under Compare plans, assign a follow-up owner and review date. The next exercise can test whether the real arrangement has been implemented.
+Choose **Finish team check** and show its preparation summary. Explain that simulation does not prove provider recovery.
 
-## 2:40–3:00 — Close
+## 2:35–3:00 — Take the plan away
 
-> BLACKOUT PROTOCOL connects the technical dependency map, the team's decisions, and the plan they can still read when the account is unavailable.
+Show **Save a readable plan** or the team summary. The exported HTML can be read without the app. Show the encrypted backup separately.
 
-## Reset and fallback
-
-**New run** preserves the previous record and starts a fresh room using the same blueprint. Use Exercise room to select baseline or improved models. If a client disconnects, reconnect it and check any pending action using its existing ID. If the browser display fails, use an exported plan; if the server fails, restart it with the same database and reopen the saved room.
+“BLACKOUT turns a dependency we might overlook into a recovery arrangement someone can prepare.”
 
 ## Likely questions
 
-- **Is 4/4 a guarantee?** No. It is reachability in the documented fictional model, conditional on its prerequisites and evidence.
-- **How is this different from a diagram?** The same rules calculate the forecast, gate exercise actions, and explain the resulting recovery path.
-- **What makes it cooperative?** Role-specific evidence must be shared before another role can make a verified decision.
-- **Does it work without internet?** It has no runtime WAN dependency, but needs the local server and LAN. Verify a physical disconnected-WAN setup before claiming a successful demonstration.
-- **Does the digest prove authenticity?** It checks against the separately saved reference; it is not a signature or external timestamp.
+- **Does it connect to Google or Instagram?** No live provider connection. A local Google Directory import can supply contact fields, which still need review.
+- **Does a recovery route guarantee success?** No. It depends on the recorded procedure, evidence and available prerequisites.
+- **Why involve the team?** Owners check their account responsibilities and the order in which recovery depends on other people/services.
+- **What works offline?** Cached private planning and standalone exported references. Shared rooms still need the local server and a reachable network. Physical offline LAN use remains unverified.
+- **Is it ready for public hosting?** The current shared-room server is for reviewed metadata on a trusted local network. Production hosting needs additional validation and controls.

@@ -1,0 +1,27 @@
+1
+00:00:00,000 --> 00:00:06,000
+Your main account is gone. Can your team recover?
+
+2
+00:00:06,000 --> 00:00:12,000
+Blackout Protocol maps your services, their owners, and their recovery dependencies.
+
+3
+00:00:12,000 --> 00:00:20,000
+Choose a loss. See which work stops, and where recovery reaches a dead end. Your real accounts stay unchanged.
+
+4
+00:00:20,000 --> 00:00:28,000
+Prepare an independent way back. Compare a separate proposal, then assign the real preparation to its owner.
+
+5
+00:00:28,000 --> 00:00:36,000
+Check the recovery order together. Missing prerequisites block simulated steps, so the team can see what needs attention.
+
+6
+00:00:36,000 --> 00:00:41,000
+Keep a readable recovery plan, and an encrypted backup.
+
+7
+00:00:41,000 --> 00:00:45,000
+Blackout Protocol. Prepare your way back.

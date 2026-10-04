@@ -2,7 +2,7 @@ export async function api<T>(path: string, options: RequestInit = {}, token?: st
   const response = await fetch(`/api${path}`, {
     ...options,
     headers: {
-      'Content-Type': 'application/json',
+      ...(options.body != null ? { 'Content-Type': 'application/json' } : {}),
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...options.headers,
     },
@@ -22,8 +22,10 @@ export function download(content: string, name: string, type: string) {
   const anchor = document.createElement('a');
   anchor.href = href;
   anchor.download = name;
+  document.body.append(anchor);
   anchor.click();
-  setTimeout(() => URL.revokeObjectURL(href), 1000);
+  anchor.remove();
+  setTimeout(() => URL.revokeObjectURL(href), 60_000);
 }
 export async function downloadPlan(blueprint: unknown, failureId: string) {
   const response = await fetch('/api/export-plan', {

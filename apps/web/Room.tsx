@@ -17,9 +17,15 @@ import {
   Share2,
   CheckCircle2,
 } from 'lucide-react';
-import type { Blueprint } from '../../packages/domain/model';
+import type { Blueprint, Role } from '../../packages/domain/model';
 import { withRecoveryKit } from '../../packages/domain/fixture';
-import type { Command, SessionView } from '../../packages/domain/session';
+import {
+  exerciseRoleName,
+  responsibilityNames,
+  type Command,
+  type SessionView,
+} from '../../packages/domain/session';
+import { TeamSetup } from './TeamSetup';
 import { formatElapsed } from '../../packages/domain/debrief';
 import {
   api,
@@ -30,9 +36,17 @@ import {
   downloadPlan,
   actionId,
   isRejected,
+  ApiError,
 } from './api';
+import { OrganisationRoom } from './OrganisationRoom';
 
-export type RoomCredential = { id: string; token: string; name: string; createdAt: string };
+export type RoomCredential = {
+  id: string;
+  token: string;
+  name: string;
+  createdAt: string;
+  mode?: 'organisation';
+};
 const chapterNames = [
   'Briefing',
   'The lockout',
@@ -40,32 +54,27 @@ const chapterNames = [
   'Operational pressure',
   'Recovery',
 ];
-const roleNames: Record<string, string> = {
-  facilitator: 'Facilitator',
-  administrator: 'Administrator',
-  finance: 'Finance',
-  coordinator: 'Coordinator',
-  observer: 'Observer',
-  pending: 'Awaiting role',
-};
 export function Room({
   id,
   credential,
   onCreate,
   onBack,
   onError,
+  onReturnToPlan,
 }: {
   id: string;
   credential?: RoomCredential;
   onCreate: (b: Blueprint) => void;
   onBack: () => void;
   onError: (s: string) => void;
+  onReturnToPlan: () => void;
 }) {
   const [view, setView] = useState<SessionView>(),
     [connected, setConnected] = useState(false),
     [busy, setBusy] = useState(false),
     [notice, setNotice] = useState(''),
     [digest, setDigest] = useState('');
+  const [removed, setRemoved] = useState(false);
   const request = useRef(0);
   const load = useCallback(async () => {
     if (!credential) return;
@@ -74,6 +83,12 @@ export function Room({
       const result = await api<SessionView>(`/sessions/${id}/state`, {}, credential.token);
       if (order === request.current) setView(result);
     } catch (e) {
+      if (e instanceof ApiError && (e.status === 404 || e.status === 401)) {
+        setView(undefined);
+        setRemoved(true);
+        onError('');
+        return;
+      }
       onError((e as Error).message);
     }
   }, [id, credential?.token, onError]);
@@ -108,6 +123,7 @@ export function Room({
     saveStorage(pendingKey, command);
     setBusy(true);
     setNotice('');
+    onError('');
     try {
       await api(`/sessions/${id}/commands`, post(command), credential.token);
       clearPending();
@@ -159,6 +175,7 @@ export function Room({
   }
   async function assign(participantId: string, role: string) {
     try {
+      onError('');
       await api(`/sessions/${id}/roles`, post({ participantId, role }), credential!.token);
       await load();
     } catch (e) {
@@ -182,12 +199,22 @@ export function Room({
     return (
       <div className="empty-state">
         <LockKeyhole size={32} />
-        <h2>Join this exercise</h2>
+        <h2>Join this room</h2>
         <p>This browser has no saved membership for this room.</p>
         <a className="button primary" href={`/join/${id}`}>
           Enter the room
         </a>
       </div>
+    );
+  if (removed)
+    return (
+      <section className="empty-state">
+        <h1>Room no longer available.</h1>
+        <p>It was deleted or this browser’s membership is no longer valid.</p>
+        <button className="button" onClick={onReturnToPlan}>
+          Back to my plan
+        </button>
+      </section>
     );
   if (!view)
     return (
@@ -199,7 +226,24 @@ export function Room({
         </button>
       </div>
     );
+  if (view.mode === 'organisation')
+    return (
+      <OrganisationRoom
+        view={view}
+        token={credential.token}
+        connected={connected}
+        busy={busy}
+        pending={!!pending}
+        submit={submit}
+        reconcile={reconcile}
+        assign={assign}
+        load={load}
+        onError={onError}
+        onExit={onReturnToPlan}
+      />
+    );
   const facilitator = view.role === 'facilitator';
+  const roleName = (role: SessionView['role']) => exerciseRoleName(view, role);
   const current = view.analysis.targets.filter((t) => t.current).length;
   const complete = view.phase === 'completed';
   return (
@@ -228,9 +272,9 @@ export function Room({
       <div className="room-toolbar">
         <span className="role-label">
           <Users size={16} />
-          {roleNames[view.role]}
+          {roleName(view.role)}
         </span>
-        <span className="muted">Revision {view.revision}</span>
+
         {facilitator && (
           <div className="toolbar-actions">
             <button
@@ -247,7 +291,7 @@ export function Room({
                 onClick={() => void submit('start')}
               >
                 <Play size={15} />
-                Start exercise
+                Start practice
               </button>
             ) : (
               !complete && (
@@ -266,7 +310,15 @@ export function Room({
                       disabled={!connected || busy || view.phase !== 'running'}
                       onClick={() => void submit('advance')}
                     >
-                      Next chapter
+                      {
+                        [
+                          '',
+                          '',
+                          'Continue: a suspicious request',
+                          'Continue: compare clues',
+                          'Continue: recovery review',
+                        ][view.stage + 1]
+                      }
                     </button>
                   )}
                   <button
@@ -275,7 +327,7 @@ export function Room({
                     onClick={() => void submit('complete')}
                   >
                     <Check size={15} />
-                    End & debrief
+                    Finish and review
                   </button>
                 </>
               )
@@ -304,8 +356,33 @@ export function Room({
       {view.phase === 'paused' && (
         <div className="notice-banner">
           <Pause size={18} />
-          Exercise paused. Decisions are held until the facilitator resumes.
+          Exercise paused. Choices are on hold until the host resumes.
         </div>
+      )}
+      {!complete && view.phase !== 'lobby' && (
+        <section className="next-instruction" aria-label="What to do next">
+          <strong>
+            {view.stage === 1
+              ? 'Start with the locked account'
+              : view.stage === 2
+                ? 'Check the urgent payment request'
+                : view.stage === 3
+                  ? 'Compare what each person knows'
+                  : 'Review the recovery'}
+          </strong>
+          <p>
+            {view.stage === 1
+              ? 'Read the account clues below. Whoever handles account recovery can choose a recovery action.'
+              : view.stage === 2
+                ? 'Someone handling payments has received an urgent message. Read it and discuss what would make you trust it.'
+                : view.stage === 3
+                  ? 'Someone handling team communication has a trusted contact. Share that clue so the payment can be checked.'
+                  : 'Review the account clues and complete any remaining recovery steps. The host can finish to see the summary.'}
+            {facilitator
+              ? ' As host, you can see every responsibility and move to the next part when ready.'
+              : ''}
+          </p>
+        </section>
       )}
       <div className="chapter-track">
         {chapterNames.slice(1).map((name, i) => (
@@ -319,15 +396,15 @@ export function Room({
         <div className="room-lobby">
           <div className="panel">
             <span className="eyebrow">THE BRIEFING</span>
-            <h2>One identity. Three perspectives.</h2>
+            <h2>What will you practise?</h2>
             <p>
-              Your team is preparing a volunteer event. When the work account is compromised, the
-              administrator, finance officer, and coordinator each see a different part of the
-              incident.
+              Your team’s work email is locked. Later, an urgent message asks for a payment. You
+              need to find a way back into the account and check whether the payment request is
+              genuine.
             </p>
             <p>
-              Share observations, verify requests, and find a documented recovery path. Every action
-              here affects fictional accounts.
+              Read your clues, share useful information, then choose an action. The app shows what
+              happened after each choice. No real account or payment is changed.
             </p>
             {facilitator ? (
               <>
@@ -361,81 +438,68 @@ export function Room({
             ) : (
               <div className="notice-banner">
                 <Clock3 size={18} />
-                The facilitator will assign your role.
+                The host will give you a responsibility and start the practice.
               </div>
             )}
           </div>
-          <div className="panel">
-            <span className="eyebrow">PARTICIPANTS / {view.participants.length}</span>
-            <h2>Your team</h2>
-            {view.participants.map((p) => (
-              <div className="participant" key={p.id}>
-                <span className="avatar">{p.name.slice(0, 1).toUpperCase()}</span>
-                <div>
-                  <strong>{p.name}</strong>
-                  <small>{p.id === view.me.id ? 'You' : roleNames[p.role]}</small>
-                </div>
-                {facilitator && p.role !== 'facilitator' ? (
-                  <select
-                    aria-label={`Role for ${p.name}`}
-                    value={p.role}
-                    onChange={(e) => void assign(p.id, e.target.value)}
-                  >
-                    <option value="pending">Assign role</option>
-                    <option value="administrator">Administrator</option>
-                    <option value="finance">Finance</option>
-                    <option value="coordinator">Coordinator</option>
-                    <option value="observer">Observer</option>
-                  </select>
-                ) : (
-                  <span className="tag">{roleNames[p.role]}</span>
-                )}
-              </div>
-            ))}
-            {facilitator && (
-              <p className="muted small">
-                You can also run a solo walkthrough. Facilitator mode exposes all roles and their
-                actions.
-              </p>
-            )}
-          </div>
+          <TeamSetup
+            view={view}
+            onAssign={assign}
+            onAddRole={async (name, responsibilities) => {
+              await api(
+                `/sessions/${id}/custom-roles`,
+                post({ name, responsibilities }),
+                credential.token,
+              );
+              await load();
+            }}
+          />
         </div>
+      )}
+      {view.phase !== 'lobby' && !complete && facilitator && (
+        <details className="simple-details">
+          <summary>People and roles</summary>
+          <TeamSetup view={view} onAssign={assign} onAddRole={async () => {}} />
+        </details>
       )}
       {view.phase !== 'lobby' && view.role !== 'pending' && (
         <>
-          <div className="metrics-row compact">
-            <div>
-              <span>Available now</span>
-              <strong>
-                {current}
-                <small> / {view.analysis.targets.length}</small>
-              </strong>
-              <p>essential activities</p>
+          <details className="simple-details">
+            <summary>Recovery progress and payment outcome</summary>
+            <div className="metrics-row compact">
+              <div>
+                <span>Available now</span>
+                <strong>
+                  {current}
+                  <small> / {view.analysis.targets.length}</small>
+                </strong>
+                <p>essential activities</p>
+              </div>
+              <div>
+                <span>Recovery forecast</span>
+                <strong>
+                  {view.analysis.targets.filter((t) => t.reachable).length}
+                  <small> / {view.analysis.targets.length}</small>
+                </strong>
+                <p>activities with a modelled route</p>
+              </div>
+              <div>
+                <span>Payment request</span>
+                <strong className="metric-word">
+                  {view.paymentDecision === 'verified'
+                    ? 'Verified'
+                    : view.paymentDecision === 'approved'
+                      ? 'Unsafe approval'
+                      : 'Unresolved'}
+                </strong>
+                <p>
+                  {view.paymentDecision === 'approved'
+                    ? '4,800 PLN fictional loss'
+                    : 'Check through an independent contact'}
+                </p>
+              </div>
             </div>
-            <div>
-              <span>Recovery forecast</span>
-              <strong>
-                {view.analysis.targets.filter((t) => t.reachable).length}
-                <small> / {view.analysis.targets.length}</small>
-              </strong>
-              <p>activities with a modelled route</p>
-            </div>
-            <div>
-              <span>Payment request</span>
-              <strong className="metric-word">
-                {view.paymentDecision === 'verified'
-                  ? 'Verified'
-                  : view.paymentDecision === 'approved'
-                    ? 'Unsafe approval'
-                    : 'Unresolved'}
-              </strong>
-              <p>
-                {view.paymentDecision === 'approved'
-                  ? '4,800 PLN fictional loss'
-                  : 'Check through an independent contact'}
-              </p>
-            </div>
-          </div>
+          </details>
           {complete && view.debrief && (
             <section className="panel debrief-measurements">
               <div className="section-heading">
@@ -564,31 +628,33 @@ export function Room({
           <div className="exercise-columns">
             <section>
               <div className="section-heading">
-                <h2>{complete ? 'Exercise observations' : 'Your observations'}</h2>
+                <h2>{complete ? 'Clues from this practice' : '1. Read and share your clues'}</h2>
                 <span className="tag">
                   <Eye size={12} />
-                  {facilitator ? 'All roles' : roleNames[view.role]}
+                  {facilitator ? 'All roles' : roleName(view.role)}
                 </span>
               </div>
               {view.observations.length ? (
                 view.observations.map((o) => (
                   <article className={`observation ${o.shared ? 'shared' : ''}`} key={o.id}>
                     <div className="observation-meta">
-                      <span>{roleNames[o.audience]}</span>
-                      <span>{o.shared ? 'SHARED WITH TEAM' : 'ROLE INFORMATION'}</span>
+                      <span>{responsibilityNames[o.audience]}</span>
+                      <span>
+                        {o.shared ? 'SHARED WITH TEAM' : 'ONLY YOUR RESPONSIBILITY CAN SEE THIS'}
+                      </span>
                     </div>
                     <h3>{o.title}</h3>
                     <p>{o.body}</p>
                     <footer>
                       <small>{o.source}</small>
-                      {!o.shared && !complete && (facilitator || view.role === o.audience) && (
+                      {!o.shared && !complete && view.responsibilities.includes(o.audience) && (
                         <button
                           className="text-button"
                           disabled={!connected || busy || !!pending || view.phase !== 'running'}
                           onClick={() => void submit('share', o.id)}
                         >
                           <Share2 size={14} />
-                          Share observation
+                          Share with the team
                         </button>
                       )}
                       {o.shared && (
@@ -608,35 +674,37 @@ export function Room({
             </section>
             <section>
               <div className="section-heading">
-                <h2>{complete ? 'Exercise record' : 'Available decisions'}</h2>
+                <h2>{complete ? 'What your team did' : '2. Choose what to do'}</h2>
                 <span className="tag">
                   {complete ? `${view.events.length} events` : 'Simulation'}
                 </span>
               </div>
               {!complete &&
-                view.actions.map((a) => (
-                  <div className="action-card" key={a.id}>
-                    <div>
-                      <span className="eyebrow">{roleNames[a.role]}</span>
-                      <h3>{a.label}</h3>
-                      {a.disabledReason && <p>{a.disabledReason}</p>}
+                view.actions
+                  .filter((a) => a.disabledReason !== 'Outcome already available')
+                  .map((a) => (
+                    <div className="action-card" key={a.id}>
+                      <div>
+                        <span className="eyebrow">{roleName(a.role)}</span>
+                        <h3>{a.label}</h3>
+                        {a.disabledReason && <p>{a.disabledReason}</p>}
+                      </div>
+                      <button
+                        className={`button small-button ${a.id === 'approve-payment' ? 'danger-outline' : ''}`}
+                        disabled={!!a.disabledReason || !connected || busy || !!pending}
+                        onClick={() => void submit('act', a.id)}
+                      >
+                        {a.disabledReason === 'Outcome already available' ? (
+                          <>
+                            <Check size={16} />
+                            <span className="sr-only">Outcome already available</span>
+                          </>
+                        ) : (
+                          'Choose this action'
+                        )}
+                      </button>
                     </div>
-                    <button
-                      className={`button small-button ${a.id === 'approve-payment' ? 'danger-outline' : ''}`}
-                      disabled={!!a.disabledReason || !connected || busy || !!pending}
-                      onClick={() => void submit('act', a.id)}
-                    >
-                      {a.disabledReason === 'Outcome already available' ? (
-                        <>
-                          <Check size={16} />
-                          <span className="sr-only">Outcome already available</span>
-                        </>
-                      ) : (
-                        'Choose'
-                      )}
-                    </button>
-                  </div>
-                ))}
+                  ))}
               {!complete && view.actions.length === 0 && (
                 <div className="empty-card">
                   This role observes the exercise. Share information with the team when available.
@@ -649,7 +717,7 @@ export function Room({
             <section className="panel timeline-panel">
               <div className="section-heading">
                 <h2>Shared timeline</h2>
-                <span className="muted small">Ordered by server sequence</span>
+                <span className="muted small">Your decisions, in order</span>
               </div>
               <Timeline events={view.events} />
             </section>
@@ -658,7 +726,7 @@ export function Room({
       )}
       <div className="room-footer">
         <button className="text-button" onClick={onBack}>
-          Return to recovery map
+          Back to practice setup
         </button>
         <span>Account operations are simulated. The room records your decisions.</span>
       </div>

@@ -36,7 +36,7 @@ describe('exercise state', () => {
         { id: 'v', revision: 2, type: 'act', target: 'verify-payment' },
         observations,
       ),
-    ).toThrow('coordinator');
+    ).toThrow('team communication');
     const unsafe = reduceCommand(
       s,
       finance,

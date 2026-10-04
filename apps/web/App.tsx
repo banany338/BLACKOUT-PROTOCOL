@@ -43,7 +43,7 @@ function initialBlueprint() {
   const parsed = blueprintSchema.safeParse(readStorage('blackout-blueprint', harborAid));
   return parsed.success ? parsed.data : harborAid;
 }
-export function App() {
+export function App({ onExit }: { onExit?: () => void }) {
   const [baseline, setBaseline] = useState<Blueprint>(initialBlueprint),
     [variant, setVariant] = useState(false),
     [failure, setFailure] = useState('work-lockout'),
@@ -229,6 +229,14 @@ export function App() {
           </span>
         </header>
         <main>
+          {onExit && (
+            <div className="practice-banner">
+              <span>FICTIONAL TEAM PRACTICE · Sample data and simulated incident actions</span>
+              <button className="button" onClick={onExit}>
+                Return to my workspace
+              </button>
+            </div>
+          )}
           {error && (
             <div className="error-banner" role="alert">
               <AlertTriangle size={18} />
@@ -271,6 +279,7 @@ export function App() {
               onCreate={(b) => void createRoom(b)}
               onBack={() => go('map')}
               onError={showError}
+              onReturnToPlan={() => go('map')}
             />
           ) : (
             <>

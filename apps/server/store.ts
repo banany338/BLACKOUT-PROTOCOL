@@ -2,7 +2,7 @@ import { DatabaseSync } from 'node:sqlite';
 import { createHash, randomBytes } from 'node:crypto';
 import { mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
-import type { Blueprint, ViewerRole } from '../../packages/domain/model';
+import { roles, type Blueprint, type ViewerRole, type Role } from '../../packages/domain/model';
 import {
   DomainError,
   newSession,
@@ -10,6 +10,7 @@ import {
   type Command,
   type Participant,
   type Session,
+  type ExerciseRole,
 } from '../../packages/domain/session';
 import { observations } from './scenario';
 
@@ -72,10 +73,25 @@ export class Store {
         .prepare('INSERT OR IGNORE INTO events VALUES (?, ?, ?)')
         .run(s.id, event.sequence, JSON.stringify(event));
   }
-  create(blueprint: Blueprint, name: string) {
+  create(blueprint: Blueprint, name: string, team?: Parameters<typeof newSession>[2]) {
     return this.transaction(() => {
       const id = makeId(),
-        session = newSession(id, blueprint);
+        session = newSession(id, blueprint, team);
+      if (team) {
+        const owners = new Map<string, string[]>();
+        for (const a of team.plan.assets.filter((a) => a.kind === 'account')) {
+          const owner = a.owner || team.plan.owner;
+          if (owner) owners.set(owner, [...(owners.get(owner) ?? []), a.id]);
+        }
+        if (owners.size > 20)
+          throw new DomainError('Group the accounts under at most 20 owners for a team check.');
+        session.customRoles = [...owners].map(([owner, accountIds], i) => ({
+          id: `custom:${makeId()}` as const,
+          name: owner.length <= 60 ? owner : `${owner.slice(0, 54)}… ${i + 1}`,
+          responsibilities: ['administrator'],
+          accountIds,
+        }));
+      }
       this.db.prepare('INSERT INTO sessions VALUES (?, ?)').run(id, JSON.stringify(session));
       return { id, ...this.addParticipant(id, name, 'facilitator') };
     });
@@ -111,17 +127,76 @@ export class Store {
     if (role === 'facilitator')
       throw new DomainError('Facilitator access cannot be assigned here.', 403);
     this.transaction(() => {
+      if (this.participants(id).find((p) => p.id === actor.id)?.role !== 'facilitator')
+        throw new DomainError('Only the host can assign people.', 403);
+      const session = this.getSession(id);
+      if (session.phase === 'completed') throw new DomainError('This practice has ended.');
+      if (session.mode && ['finance', 'coordinator'].includes(role))
+        throw new DomainError('Assign an account owner or observer for this check.');
+      if (
+        ![...roles, 'observer', 'pending'].includes(role as Role) &&
+        !session.customRoles?.some((r) => r.id === role)
+      )
+        throw new DomainError('Choose a role from this practice room.');
       const target = this.participants(id).find((p) => p.id === participantId);
       if (!target || target.role === 'facilitator')
         throw new DomainError('Participant not found.', 404);
-      if (
-        !['observer', 'pending'].includes(role) &&
-        this.participants(id).some((p) => p.role === role && p.id !== participantId)
-      )
-        throw new DomainError('That role is already assigned.');
       this.db
         .prepare('UPDATE participants SET role = ? WHERE id = ? AND session_id = ?')
         .run(role, participantId, id);
+    });
+  }
+  addRole(
+    id: string,
+    actor: Participant,
+    name: string,
+    responsibilities: Role[],
+    accountIds?: string[],
+  ): ExerciseRole {
+    return this.transaction(() => {
+      if (this.participants(id).find((p) => p.id === actor.id)?.role !== 'facilitator')
+        throw new DomainError('Only the host can add roles.', 403);
+      const session = this.getSession(id);
+      if (session.phase !== 'lobby')
+        throw new DomainError('Add roles before starting the practice.');
+      if (
+        session.mode &&
+        (!accountIds?.length ||
+          accountIds.length > 100 ||
+          accountIds.some(
+            (id) => !session.sharedPlan?.assets.some((a) => a.kind === 'account' && a.id === id),
+          ))
+      )
+        throw new DomainError('Select accounts from this team map.');
+      const existing = session.customRoles ?? [];
+      if (existing.length >= 20) throw new DomainError('This room already has 20 custom roles.');
+      if (existing.some((r) => r.name.toLowerCase() === name.toLowerCase()))
+        throw new DomainError('A role with this name already exists.');
+      if (
+        !name.trim() ||
+        name.length > 60 ||
+        !responsibilities.length ||
+        responsibilities.some((r) => !roles.includes(r))
+      )
+        throw new DomainError('Give the role a name and at least one responsibility.');
+      const role: ExerciseRole = {
+        id: `custom:${makeId()}`,
+        name: name.trim(),
+        responsibilities: session.mode ? ['administrator'] : [...new Set(responsibilities)],
+        ...(session.mode ? { accountIds: [...new Set(accountIds)] } : {}),
+      };
+      session.customRoles = [...existing, role];
+      this.saveSession(session);
+      return role;
+    });
+  }
+  deleteSession(id: string, actor: Participant) {
+    return this.transaction(() => {
+      if (this.participants(id).find((p) => p.id === actor.id)?.role !== 'facilitator')
+        throw new DomainError('Only the host can delete this room.', 403);
+      for (const table of ['events', 'commands', 'participants'])
+        this.db.prepare(`DELETE FROM ${table} WHERE session_id = ?`).run(id);
+      this.db.prepare('DELETE FROM sessions WHERE id = ?').run(id);
     });
   }
   actionResult(id: string, actionId: string, actor: Participant) {

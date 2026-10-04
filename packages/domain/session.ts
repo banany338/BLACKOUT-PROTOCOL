@@ -1,4 +1,5 @@
-import type { Analysis, Blueprint, Role, ViewerRole } from './model';
+import type { Analysis, Blueprint, Failure, Role, ViewerRole } from './model';
+import type { Plan } from '../planner/model';
 import { analyze, applyFailure, closure, factLabel } from './engine';
 import { failureById } from './fixture';
 import { summarizeExercise, type Debrief } from './debrief';
@@ -24,6 +25,10 @@ export type Event = {
   actionId: string;
 };
 export type Session = {
+  mode?: 'organisation';
+  sharedPlan?: Plan;
+  lostIds?: string[];
+  failure?: Failure;
   id: string;
   blueprint: Blueprint;
   scenarioVersion: string;
@@ -39,7 +44,35 @@ export type Session = {
   endedAt?: string;
   paymentDecision?: 'verified' | 'approved';
   supportRequested: boolean;
+  customRoles?: ExerciseRole[];
 };
+export type ExerciseRole = {
+  id: `custom:${string}`;
+  name: string;
+  responsibilities: Role[];
+  accountIds?: string[];
+};
+export const responsibilityNames: Record<Role, string> = {
+  administrator: 'Account recovery',
+  finance: 'Payment checks',
+  coordinator: 'Team communication',
+};
+export function responsibilitiesFor(s: Pick<Session, 'customRoles'>, role: ViewerRole): Role[] {
+  if (role === 'facilitator') return ['administrator', 'finance', 'coordinator'];
+  if (role === 'administrator' || role === 'finance' || role === 'coordinator') return [role];
+  return s.customRoles?.find((r) => r.id === role)?.responsibilities ?? [];
+}
+export function exerciseRoleName(s: Pick<Session, 'customRoles'>, role: ViewerRole): string {
+  const names: Record<string, string> = {
+    facilitator: 'Host · all responsibilities',
+    administrator: 'Account lead',
+    finance: 'Payments lead',
+    coordinator: 'Team coordinator',
+    observer: 'Observer',
+    pending: 'Waiting for an assignment',
+  };
+  return names[role] ?? s.customRoles?.find((r) => r.id === role)?.name ?? 'Unassigned';
+}
 export type Participant = { id: string; name: string; role: ViewerRole };
 export type Command = { id: string; revision: number; type: string; target?: string };
 export type ActionView = {
@@ -50,6 +83,9 @@ export type ActionView = {
   category: 'recovery' | 'decision' | 'coordination';
 };
 export type SessionView = {
+  mode?: 'organisation';
+  sharedPlan?: Plan;
+  lostIds?: string[];
   id: string;
   blueprint: Blueprint;
   phase: Session['phase'];
@@ -67,6 +103,9 @@ export type SessionView = {
   paymentDecision?: Session['paymentDecision'];
   supportRequested: boolean;
   joinPath?: string;
+  joinUrls?: string[];
+  customRoles: ExerciseRole[];
+  responsibilities: Role[];
   debrief: Debrief;
 };
 
@@ -79,13 +118,25 @@ export class DomainError extends Error {
   }
 }
 
-export function newSession(id: string, blueprint: Blueprint): Session {
+export function newSession(
+  id: string,
+  blueprint: Blueprint,
+  team?: { plan: Plan; lostIds: string[]; failure: Failure },
+): Session {
   return {
+    ...(team
+      ? {
+          mode: 'organisation' as const,
+          sharedPlan: structuredClone(team.plan),
+          lostIds: [...team.lostIds],
+          failure: structuredClone(team.failure),
+        }
+      : {}),
     id,
     blueprint: structuredClone(blueprint),
-    scenarioVersion: 'lockout-1',
+    scenarioVersion: team ? 'organisation-check-1' : 'lockout-1',
     engineVersion: '1',
-    seed: 'harbor-fixed-1',
+    seed: team ? 'owner-declared-map' : 'harbor-fixed-1',
     phase: 'lobby',
     stage: 0,
     revision: 0,
@@ -98,10 +149,26 @@ export function newSession(id: string, blueprint: Blueprint): Session {
 
 export function availableActions(s: Session, p: Participant): ActionView[] {
   if (s.phase !== 'running' || ['pending', 'observer'].includes(p.role)) return [];
-  const current = closure(s.facts, s.blueprint.rules, false).facts;
-  const can = (role: Role) => p.role === 'facilitator' || p.role === role;
+  const activeRules = s.blueprint.rules.filter((r) => !s.failure?.disabledRules.includes(r.id));
+  const current = closure(s.facts, activeRules, false).facts;
+  const can = (role: Role) => responsibilitiesFor(s, p.role).includes(role);
+  const owns = (grants: string[]) => {
+    if (!s.mode || p.role === 'facilitator' || p.role === 'administrator') return true;
+    const accounts =
+      s.sharedPlan?.assets.filter(
+        (a) => a.kind === 'account' && grants.includes(`asset-${a.id}.available`),
+      ) ?? [];
+    const scope = s.customRoles?.find((r) => r.id === p.role)?.accountIds ?? [];
+    return !!accounts.length && accounts.every((a) => scope.includes(a.id));
+  };
   const result: ActionView[] = s.blueprint.rules
-    .filter((r) => r.kind === 'action' && r.enabled && can(r.responsibleRole ?? 'administrator'))
+    .filter(
+      (r) =>
+        r.kind === 'action' &&
+        r.enabled &&
+        can(r.responsibleRole ?? 'administrator') &&
+        owns(r.grants),
+    )
     .map((r) => ({
       id: `rule:${r.id}`,
       label: r.label,
@@ -118,7 +185,7 @@ export function availableActions(s: Session, p: Participant): ActionView[] {
                 .join(', ')}`
             : undefined,
     }));
-  if (s.stage >= 2 && can('finance')) {
+  if (!s.mode && s.stage >= 2 && can('finance')) {
     result.push({
       id: 'verify-payment',
       label: 'Verify through the known contact',
@@ -127,7 +194,7 @@ export function availableActions(s: Session, p: Participant): ActionView[] {
       disabledReason: s.paymentDecision
         ? 'Decision already recorded'
         : !s.shared.includes('known-contact')
-          ? 'Ask the coordinator to share the independent contact observation'
+          ? 'Ask someone handling team communication to share the trusted-contact clue'
           : undefined,
     });
     result.push({
@@ -138,7 +205,7 @@ export function availableActions(s: Session, p: Participant): ActionView[] {
       disabledReason: s.paymentDecision ? 'Decision already recorded' : undefined,
     });
   }
-  if (can('administrator'))
+  if (!s.mode && can('administrator'))
     result.push({
       id: 'support',
       label: 'Escalate to provider support',
@@ -172,10 +239,13 @@ export function reduceCommand(
     next.phase = 'running';
     next.stage = 1;
     next.startedAt = now;
-    next.facts = applyFailure(s.blueprint.initialFacts, failureById('work-lockout'));
-    label = 'Work identity lost: credentials changed and work sessions revoked.';
+    next.facts = applyFailure(s.blueprint.initialFacts, s.failure ?? failureById('work-lockout'));
+    label = s.mode
+      ? `Simulated loss: ${s.failure!.label}`
+      : 'Work identity lost: credentials changed and work sessions revoked.';
   } else if (command.type === 'advance') {
     facilitator();
+    if (s.mode) throw new DomainError('This team check has no story chapters.');
     if (s.phase !== 'running' || s.stage >= 4)
       throw new DomainError('No next chapter is available.');
     next.stage++;
@@ -198,10 +268,11 @@ export function reduceCommand(
     next.endedAt = now;
     label = 'Exercise completed. Debrief ready.';
   } else if (command.type === 'share') {
+    if (s.mode) throw new DomainError('This team check uses shared map information.');
     if (s.phase !== 'running')
       throw new DomainError('Observations can be shared during the exercise.');
     const observation = observations.find((o) => o.id === command.target && o.stage <= s.stage);
-    if (!observation || (p.role !== 'facilitator' && p.role !== observation.audience))
+    if (!observation || !responsibilitiesFor(s, p.role).includes(observation.audience))
       throw new DomainError('This observation is not available to your role.', 403);
     if (s.shared.includes(observation.id))
       throw new DomainError('This observation is already shared.');
@@ -248,13 +319,81 @@ export function projectSession(
   participants: Participant[],
   observations: Observation[],
 ): SessionView {
+  if (s.mode && p.role === 'pending') {
+    // Joining alone does not authorise access to the organisation snapshot.
+    const blueprint: Blueprint = {
+      id: s.id,
+      version: 1,
+      name: 'Team check',
+      description: '',
+      resources: [
+        {
+          id: 'pending',
+          label: 'Waiting for an assignment',
+          kind: 'account',
+          fact: 'pending.available',
+          owner: '',
+          description: '',
+          column: 0,
+          row: 0,
+        },
+      ],
+      rules: [
+        {
+          id: 'pending',
+          label: 'Awaiting assignment',
+          kind: 'derived',
+          requiresAll: [],
+          grants: ['pending.available'],
+          enabled: false,
+          evidence: 'unknown',
+          sourceNote: '',
+        },
+      ],
+      initialFacts: [],
+      targets: [{ id: 'pending', label: 'Waiting', fact: 'pending.available' }],
+      assumptions: [],
+      followUps: [],
+      improved: false,
+    };
+    const failure = failureById('none');
+    return {
+      id: s.id,
+      mode: s.mode,
+      blueprint,
+      phase: s.phase,
+      stage: s.stage,
+      revision: s.revision,
+      role: p.role,
+      me: p,
+      participants: [p],
+      observations: [],
+      events: [],
+      actions: [],
+      analysis: analyze(blueprint, failure),
+      supportRequested: false,
+      customRoles: [],
+      responsibilities: [],
+      debrief: {
+        timingAvailable: false,
+        containmentMs: null,
+        recoveryRouteMs: null,
+        trustedAccessMs: null,
+        unsafeDecisions: 0,
+        sharedObservations: 0,
+      },
+    };
+  }
   const all =
     p.role === 'facilitator' ||
     (s.phase === 'completed' && !['pending', 'observer'].includes(p.role));
-  const visible = observations.filter(
-    (o) => o.stage <= s.stage && (all || o.audience === p.role || s.shared.includes(o.id)),
+  const visible = (s.mode ? [] : observations).filter(
+    (o) =>
+      o.stage <= s.stage &&
+      (all || responsibilitiesFor(s, p.role).includes(o.audience) || s.shared.includes(o.id)),
   );
   return {
+    ...(s.mode ? { mode: s.mode, sharedPlan: s.sharedPlan, lostIds: s.lostIds } : {}),
     id: s.id,
     blueprint: s.blueprint,
     phase: s.phase,
@@ -263,6 +402,8 @@ export function projectSession(
     role: p.role,
     me: p,
     participants,
+    customRoles: s.customRoles ?? [],
+    responsibilities: responsibilitiesFor(s, p.role),
     observations: visible.map((o) => ({
       ...resolveObservation(o, s),
       shared: s.shared.includes(o.id),
@@ -273,7 +414,7 @@ export function projectSession(
     actions: availableActions(s, p),
     analysis: analyze(
       s.blueprint,
-      failureById(s.phase === 'lobby' ? 'none' : 'work-lockout'),
+      s.phase === 'lobby' ? failureById('none') : (s.failure ?? failureById('work-lockout')),
       s.facts,
     ),
     startedAt: s.startedAt,
